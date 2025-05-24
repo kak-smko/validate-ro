@@ -1,6 +1,6 @@
 [package]
 name = "validate-ro"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 description = "A flexible validation framework with sync/async support and MongoDB integration"
 license = "MIT OR Apache-2.0"
@@ -10,6 +10,10 @@ documentation = "https://docs.rs/validate-ro"
 readme = "README.md"
 keywords = ["validation", "validator", "forms", "mongodb", "async"]
 categories = ["web-programming"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 mongodb = "3.2.3"
