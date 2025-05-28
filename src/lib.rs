@@ -117,7 +117,7 @@ impl Validator for Rules {
         Ok(())
     }
 
-    async fn validate_async(&self, _db: &Arc<Database>, value: &Value) -> ValidationResult {
+    async fn validate_async(&self, _db: &Database, value: &Value) -> ValidationResult {
         let value = if value.is_null() && self.default_value.is_some() {
             self.default_value.as_ref().unwrap()
         } else {
@@ -254,7 +254,7 @@ impl FormValidator {
     /// - Err(HashMap) with field names and error lists
     pub async fn validate_async(
         &self,
-        db:&Arc<Database>,
+        db:&Database,
         form_data: &Value,
     ) -> Result<Document, HashMap<String,Vec<ValidationError>>> {
         let mut errors = HashMap::new();

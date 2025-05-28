@@ -9,7 +9,7 @@ use crate::error::ValidationError;
 pub trait Validator: Any+Send + Sync {
     fn validate(&self, value: &Value) -> ValidationResult;
 
-    async fn validate_async(&self, _db: &Arc<Database>, value: &Value) -> ValidationResult {
+    async fn validate_async(&self, _db: &Database, value: &Value) -> ValidationResult {
         self.validate(value)
     }
 

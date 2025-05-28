@@ -657,7 +657,7 @@ impl Validator for UniqueValidator {
         Err(ValidationError::Custom("Async validation required".to_string()))
     }
 
-    async fn validate_async(&self, db: &Arc<Database>, value: &Value) -> ValidationResult {
+    async fn validate_async(&self, db: &Database, value: &Value) -> ValidationResult {
         if value.is_null() {
             return Ok(());
         }
