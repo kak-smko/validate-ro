@@ -16,7 +16,7 @@ pub trait Validator: Any+Send + Sync {
     fn as_any(&self) -> &dyn Any;
 }
 
-// Implement Validator for functions with matching signature
+
 impl<F> Validator for F
 where
     F: Fn(&Value) -> ValidationResult+Sync+Send+ 'static

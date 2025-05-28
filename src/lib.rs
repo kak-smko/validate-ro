@@ -51,7 +51,10 @@
 use std::any::Any;
 use std::collections::HashMap;
 use std::sync::Arc;
-use mongodb::Database;
+use async_trait::async_trait;
+use mongodb::bson::{to_bson, Document};
+use mongodb::{bson, Database};
+use mongodb::bson::ser::Error;
 use serde_json::Value;
 use crate::error::ValidationError;
 use crate::traits::{ValidationResult, Validator};
@@ -101,6 +104,7 @@ impl Rules {
     }
 }
 
+#[async_trait]
 impl Validator for Rules {
     fn validate(&self, value: &Value) -> ValidationResult {
         let value = if value.is_null() && self.default_value.is_some() {
@@ -110,6 +114,18 @@ impl Validator for Rules {
         };
         for validator in &self.validators {
             validator.validate(value)?;
+        }
+        Ok(())
+    }
+
+    async fn validate_async(&self, _db: &Arc<Database>, value: &Value) -> ValidationResult {
+        let value = if value.is_null() && self.default_value.is_some() {
+            self.default_value.as_ref().unwrap()
+        } else {
+            value
+        };
+        for validator in &self.validators {
+            validator.validate_async(_db,value).await?;
         }
         Ok(())
     }
@@ -150,13 +166,6 @@ impl FormValidator {
             field_validators: HashMap::new(),
         }
     }
-    /// Creates a validator that stops after first error
-    pub fn break_on_first_error()->Self{
-        Self {
-            break_on_error:true,
-            field_validators: HashMap::new(),
-        }
-    }
 
     /// Adds validation rules for a field
     ///
@@ -177,12 +186,12 @@ impl FormValidator {
     /// Validates form data synchronously
     ///
     /// Returns either:
-    /// - Ok(HashMap) with validated values (including defaults)
+    /// - Ok(Document) with validated values (including defaults)
     /// - Err(HashMap) with field names and error lists
     pub fn validate(
         &self,
         form_data: &Value,
-    ) -> Result<HashMap<String, Value>, HashMap<String,Vec<ValidationError>>> {
+    ) -> Result<Document, HashMap<String,Vec<ValidationError>>> {
         let mut errors = HashMap::new();
         let mut valid_data = HashMap::new();
 
@@ -224,7 +233,15 @@ impl FormValidator {
         }
 
         if errors.is_empty() {
-            Ok(valid_data)
+            match hashmap_to_document(valid_data){
+                Ok(a) => {
+                    Ok(a)
+                }
+                Err(e) => {
+                    errors.insert("data".to_string(),vec![ValidationError::Custom(e.to_string())]);
+                    Err(errors)
+                }
+            }
         } else {
             Err(errors)
         }
@@ -233,11 +250,14 @@ impl FormValidator {
     /// Validates form data asynchronously with MongoDB access
     ///
     /// Used for validators that require database checks (like uniqueness)
+    /// Returns either:
+    /// - Ok(Document) with validated values (including defaults)
+    /// - Err(HashMap) with field names and error lists
     pub async fn validate_async(
         &self,
         db:&Arc<Database>,
         form_data: &Value,
-    ) -> Result<HashMap<String, Value>, HashMap<String,Vec<ValidationError>>> {
+    ) -> Result<Document, HashMap<String,Vec<ValidationError>>> {
         let mut errors = HashMap::new();
         let mut valid_data = HashMap::new();
 
@@ -260,6 +280,7 @@ impl FormValidator {
             } else {
                 value
             };
+
             if let Err(err) = validator.validate_async(db,processed_value).await {
                 match errors.get_mut(field_name){
                     None => {
@@ -278,9 +299,32 @@ impl FormValidator {
         }
 
         if errors.is_empty() {
-            Ok(valid_data)
+            match hashmap_to_document(valid_data){
+                Ok(a) => {
+                    Ok(a)
+                }
+                Err(e) => {
+                    errors.insert("data".to_string(),vec![ValidationError::Custom(e.to_string())]);
+                    Err(errors)
+                }
+            }
         } else {
             Err(errors)
         }
     }
+
+    pub fn break_on_error(&mut self, break_on_error: bool) {
+        self.break_on_error = break_on_error;
+    }
+}
+fn hashmap_to_document(input: HashMap<String, Value>) -> Result<Document, bson::ser::Error> {
+    let mut doc = Document::new();
+
+    for (key, value) in input {
+        let bson_value = to_bson(&value)?;
+
+        doc.insert(key, bson_value);
+    }
+
+    Ok(doc)
 }
