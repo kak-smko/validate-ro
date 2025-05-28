@@ -54,7 +54,6 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use mongodb::bson::{to_bson, Document};
 use mongodb::{bson, Database};
-use mongodb::bson::ser::Error;
 use serde_json::Value;
 use crate::error::ValidationError;
 use crate::traits::{ValidationResult, Validator};
@@ -313,8 +312,9 @@ impl FormValidator {
         }
     }
 
-    pub fn break_on_error(&mut self, break_on_error: bool) {
-        self.break_on_error = break_on_error;
+    pub fn break_on_error(mut self) -> FormValidator {
+        self.break_on_error = true;
+        self
     }
 }
 fn hashmap_to_document(input: HashMap<String, Value>) -> Result<Document, bson::ser::Error> {

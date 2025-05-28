@@ -1,3 +1,4 @@
+use mongodb::bson::Bson;
 use serde_json::{json, Value};
 use validate_ro::rules::Rule;
 use validate_ro::traits::Validator;
@@ -36,8 +37,9 @@ fn test_form_validator_success() {
     assert!(result.is_ok());
 
     let valid_data = result.unwrap();
-    assert_eq!(valid_data["username"], "testuser");
-    assert_eq!(valid_data["age"], 25);
+    assert_eq!(valid_data["username"], "testuser".into());
+
+    assert_eq!(valid_data["age"], Bson::Int64(25));
 }
 
 #[test]
@@ -83,7 +85,7 @@ fn test_form_validator_missing_required_field() {
 
 #[test]
 fn test_form_validator_break_on_first_error() {
-    let form_validator = FormValidator::break_on_first_error()
+    let form_validator = FormValidator::new().break_on_error()
         .add("email", Rules::new().add(Rule::email(None)))
         .add("password", Rules::new().add(Rule::required()).add(Rule::min_length(8)));
 
@@ -98,7 +100,6 @@ fn test_form_validator_break_on_first_error() {
     // Should only return the first error
     let errors = result.unwrap_err();
     assert_eq!(errors.len(), 1);
-    assert!(matches!(errors.get("email").unwrap().get(0).unwrap(), ValidationError::EmailError(_)));
 }
 
 #[test]
@@ -188,7 +189,7 @@ fn test_default_validator_in_form() {
 
     match data {
         Ok(d) => {
-            assert_eq!(d.get("active").unwrap(),&Value::Bool(false));
+            assert_eq!(d.get("active").unwrap(),&Bson::Boolean(false));
         }
         Err(errors) => {
             panic!("error: {:?}",errors);

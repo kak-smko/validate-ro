@@ -1,7 +1,7 @@
-use validator::rules::*;
+use validate_ro::rules::*;
 use serde_json::{json, Value};
-use validator::error::ValidationError;
-use validator::traits::Validator;
+use validate_ro::error::ValidationError;
+use validate_ro::traits::Validator;
 
 #[test]
 fn test_required() {
