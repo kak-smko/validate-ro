@@ -2,12 +2,28 @@ use mongodb::bson::Bson;
 use serde_json::{json, Value};
 use validate_ro::rules::Rule;
 use validate_ro::traits::Validator;
-use validate_ro::{FormValidator, Rules};
+use validate_ro::{rules, FormValidator, Rules};
 use validate_ro::error::ValidationError;
 
 #[test]
 fn test_rules_validation() {
     let rules = Rules::new().add(Rule::required()).add(Rule::min_length(3));
+
+    // Test valid input
+    assert!(rules.validate(&json!("valid")).is_ok());
+
+    // Test empty string
+    assert!(rules.validate(&json!("")).is_err());
+
+    // Test null value
+    assert!(rules.validate(&Value::Null).is_err());
+
+    // Test too short string
+    assert!(rules.validate(&json!("ab")).is_err());
+}
+#[test]
+fn test_rules_macro_validation() {
+    let rules = rules![Rule::required(), Rule::min_length(3)];
 
     // Test valid input
     assert!(rules.validate(&json!("valid")).is_ok());
@@ -41,6 +57,7 @@ fn test_form_validator_success() {
 
     assert_eq!(valid_data["age"], Bson::Int64(25));
 }
+
 
 #[test]
 fn test_form_validator_with_errors() {

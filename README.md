@@ -31,14 +31,14 @@ validate-ro = "0.1"
 ## Quick Start
 
 ```rust
-use validate_ro::{FormValidator,Rules, rules::Rule};
+use validate_ro::{FormValidator,Rules,rules, rules::Rule};
 use serde_json::json;
 
 fn main() {
     // Build a validator
     let validator = FormValidator::new()
         .add("username", Rules::new().add(Rule::required()).add(Rule::min_length(5)))
-        .add("email", Rules::set(vec![Rule::required(),Rule::email(None)]))
+        .add("email", rules![Rule::required(),Rule::email(None)])
         .add("age", Rules::new().add(Rule::integer()).add(Rule::min_value(18.0)).default(json!(21)));
 
     // Validate some data
@@ -70,8 +70,8 @@ use validate_ro::rules::Rule;
 let is_adult = Rules::new().add(Rule::integer()).add(Rule::min_value(18.0));
 assert!(is_adult.validate(&json!(21)).is_ok());
 
-// or use set
-let is_adult = Rules::set(vec![Rule::integer(),Rule::min_value(18.0)]);
+// or use macro
+let is_adult = rules![Rule::integer(),Rule::min_value(18.0)];
 assert!(is_adult.validate(&json!(21)).is_ok());
 ```
 

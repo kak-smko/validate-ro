@@ -88,13 +88,6 @@ impl Rules {
             default_value: None,
         }
     }
-    /// Creates a new Rules container
-    pub fn set(rules:Vec<Box<dyn Validator+ Send + Sync>>) -> Self {
-        Self {
-            validators: rules,
-            default_value: None,
-        }
-    }
 
     /// Adds a validator to the rules chain
     pub fn add<V: Validator + 'static>(mut self, validator: V) -> Self {
@@ -106,6 +99,9 @@ impl Rules {
     pub fn default(mut self, default: Value) -> Self {
         self.default_value = Some(default);
         self
+    }
+    pub fn len(&self) -> usize {
+        self.validators.len()
     }
 }
 
@@ -333,4 +329,15 @@ fn hashmap_to_document(input: HashMap<String, Value>) -> Result<Document, bson::
     }
 
     Ok(doc)
+}
+
+#[macro_export]
+macro_rules! rules {
+    ($($rule:expr),+ $(,)?) => {
+        {
+            let mut r = Rules::new();
+            $(r = r.add($rule);)+
+            r
+        }
+    };
 }
