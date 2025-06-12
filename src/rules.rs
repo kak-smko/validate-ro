@@ -37,7 +37,6 @@
 
 use std::any::Any;
 use std::collections::HashSet;
-use std::sync::Arc;
 use async_trait::async_trait;
 use mongodb::bson::{doc, Bson, Document};
 use mongodb::{Collection, Database};

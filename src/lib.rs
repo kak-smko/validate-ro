@@ -50,7 +50,6 @@
 
 use std::any::Any;
 use std::collections::HashMap;
-use std::sync::Arc;
 use async_trait::async_trait;
 use mongodb::bson::{to_bson, Document};
 use mongodb::{bson, Database};
@@ -86,6 +85,13 @@ impl Rules {
     pub fn new() -> Self {
         Self {
             validators: Vec::new(),
+            default_value: None,
+        }
+    }
+    /// Creates a new Rules container
+    pub fn set(rules:Vec<Box<dyn Validator+ Send + Sync>>) -> Self {
+        Self {
+            validators: rules,
             default_value: None,
         }
     }

@@ -38,7 +38,7 @@ fn main() {
     // Build a validator
     let validator = FormValidator::new()
         .add("username", Rules::new().add(Rule::required()).add(Rule::min_length(5)))
-        .add("email", Rules::new().add(Rule::required()).add(Rule::email(None)))
+        .add("email", Rules::set(vec![Rule::required(),Rule::email(None)]))
         .add("age", Rules::new().add(Rule::integer()).add(Rule::min_value(18.0)).default(json!(21)));
 
     // Validate some data
@@ -68,6 +68,10 @@ use validate_ro::rules::Rule;
 
 // Single field validation
 let is_adult = Rules::new().add(Rule::integer()).add(Rule::min_value(18.0));
+assert!(is_adult.validate(&json!(21)).is_ok());
+
+// or use set
+let is_adult = Rules::set(vec![Rule::integer(),Rule::min_value(18.0)]);
 assert!(is_adult.validate(&json!(21)).is_ok());
 ```
 
