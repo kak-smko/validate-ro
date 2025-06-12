@@ -60,6 +60,8 @@ use crate::traits::{ValidationResult, Validator};
 pub mod rules;
 pub mod traits;
 pub mod error;
+mod macros;
+pub use macros::*;
 
 /// Container for multiple validators with optional default value
 ///
@@ -329,15 +331,4 @@ fn hashmap_to_document(input: HashMap<String, Value>) -> Result<Document, bson::
     }
 
     Ok(doc)
-}
-
-#[macro_export]
-macro_rules! rules {
-    ($($rule:expr),+ $(,)?) => {
-        {
-            let mut r = Rules::new();
-            $(r = r.add($rule);)+
-            r
-        }
-    };
 }
